@@ -29,13 +29,12 @@ import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
 import net.runelite.api.coords.LocalPoint;
-import net.runelite.api.events.ClientTick;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.callback.Hooks;
 import net.runelite.client.config.ConfigManager;
-import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.ui.DrawManager;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 @Slf4j
@@ -60,11 +59,19 @@ public class FirstPersonPlugin extends Plugin
 	@Inject
 	private OverlayManager overlayManager;
 
+	@Inject
+	private DrawManager drawManager;
+
 	int[] yAxisAbsoluteChange = PreCalculatedTransformations.yAxisAbsoluteChange;
 
 	double[] xAndYAxisChangeWithPitch = PreCalculatedTransformations.xAndYAxisChangeWithPitch;
 
 	private final Hooks.RenderableDrawListener drawListener = this::shouldDraw;
+
+	private final Runnable updateFocus = () -> {
+		if (client.getCameraMode() != 1) client.setCameraMode(1);
+		updateCameraPosition();
+	};
 
 	@Override
 	protected void startUp() throws Exception
@@ -75,6 +82,7 @@ public class FirstPersonPlugin extends Plugin
 			client.setCameraPitchRelaxerEnabled(true);
 		}
 		hooks.registerRenderableDrawListener(drawListener);
+		drawManager.registerEveryFrameListener(updateFocus);
 	}
 
 	@Override
@@ -83,6 +91,7 @@ public class FirstPersonPlugin extends Plugin
 		client.setCameraPitchRelaxerEnabled(false);
 		client.setCameraMode(0);
 		hooks.unregisterRenderableDrawListener(drawListener);
+		drawManager.unregisterEveryFrameListener(updateFocus);
 	}
 
 	boolean shouldDraw(Renderable renderable, boolean drawingUI)
@@ -100,13 +109,6 @@ public class FirstPersonPlugin extends Plugin
 		}
 
 		return true;
-	}
-
-	@Subscribe
-	public void onClientTick(ClientTick clientTick)
-	{
-		if (client.getCameraMode() != 1) client.setCameraMode(1);
-		updateCameraPosition();
 	}
 
 	private void updateCameraPosition()
