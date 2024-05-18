@@ -168,24 +168,24 @@ public class FirstPersonPlugin extends Plugin implements KeyListener, MouseListe
 			xPosOfMouseDown = currentMousePos.getX();
 			yPosOfMouseDown = currentMousePos.getY();
 		}
-		else if (diff < 1000)
+		else if (diff < 10000)
 		{
 			if (rightKeyPressed)
 			{
 				addedYaw = (int) diff;
 			}
-			else if (leftKeyPressed)
+			if (leftKeyPressed)
 			{
-				addedYaw = (int) -diff;
+				addedYaw = addedYaw - (int) diff;
 			}
 
 			if (upKeyPressed)
 			{
 				addedPitch = (int) diff;
 			}
-			else if (downKeyPressed)
+			if (downKeyPressed)
 			{
-				addedPitch = (int) -diff;
+				addedPitch = addedYaw - (int) diff;
 			}
 		}
 
@@ -298,18 +298,22 @@ public class FirstPersonPlugin extends Plugin implements KeyListener, MouseListe
 			case KeyEvent.VK_D:
 				e.consume();
 				rightKeyPressed = false;
+				break;
 			case KeyEvent.VK_LEFT:
 			case KeyEvent.VK_A:
 				e.consume();
 				leftKeyPressed = false;
+				break;
 			case KeyEvent.VK_UP:
 			case KeyEvent.VK_W:
 				e.consume();
 				upKeyPressed = false;
+				break;
 			case KeyEvent.VK_DOWN:
 			case KeyEvent.VK_S:
 				e.consume();
 				downKeyPressed = false;
+				break;
 		}
 	}
 
