@@ -89,6 +89,8 @@ public class FirstPersonPlugin extends Plugin implements KeyListener, MouseListe
 	int xPosOfMouseDown;
 	int yPosOfMouseDown;
 
+	int lastPitch = -1;
+
 	private final Runnable updateFocus = () -> {
 		if (client.getCameraMode() != 1) activateFirstPersonCameraMode();
 		updateCameraPosition();
@@ -199,7 +201,18 @@ public class FirstPersonPlugin extends Plugin implements KeyListener, MouseListe
 
 		if (addedPitch != 0 && client.getCameraPitchTarget() + addedPitch < 512 && client.getCameraPitchTarget() + addedPitch >= 0)
 		{
-			client.setCameraPitchTarget(client.getCameraPitchTarget() + addedPitch);
+			int currentPitch = client.getCameraPitch();
+
+			// If we've gone below the current pitch limit, thus the adjusting pitch got stuck, shift back to it
+			if (lastPitch == currentPitch && currentPitch >= client.getCameraPitchTarget() && addedPitch < 0)
+			{
+				client.setCameraPitchTarget(client.getCameraPitch());
+			}
+			else
+			{
+				client.setCameraPitchTarget(client.getCameraPitchTarget() + addedPitch);
+			}
+			lastPitch = currentPitch;
 		}
 
 		int yaw = client.getCameraYawTarget();
