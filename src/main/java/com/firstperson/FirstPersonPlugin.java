@@ -153,8 +153,9 @@ public class FirstPersonPlugin extends Plugin implements KeyListener, MouseListe
 		lastMillis = now;
 		final long diff = now - before;
 		// Assume free camera speed of 1
-		int addedYaw = 0;
-		int addedPitch = 0;
+		double addedYaw = 0;
+		double addedPitch = 0;
+		double cameraSpeed = config.keyCameraSpeed();
 
 		Point currentMousePos = client.getMouseCanvasPosition();
 
@@ -172,20 +173,20 @@ public class FirstPersonPlugin extends Plugin implements KeyListener, MouseListe
 		{
 			if (rightKeyPressed)
 			{
-				addedYaw = (int) diff;
+				addedYaw = diff * cameraSpeed;
 			}
 			if (leftKeyPressed)
 			{
-				addedYaw = addedYaw - (int) diff;
+				addedYaw = addedYaw - diff * cameraSpeed;
 			}
 
 			if (upKeyPressed)
 			{
-				addedPitch = (int) -diff;
+				addedPitch = -diff * cameraSpeed;
 			}
 			if (downKeyPressed)
 			{
-				addedPitch = addedYaw - (int) -diff;
+				addedPitch = addedYaw - -diff * cameraSpeed;
 			}
 		}
 		if (config.inverseKeys())
@@ -204,7 +205,7 @@ public class FirstPersonPlugin extends Plugin implements KeyListener, MouseListe
 
 		if (addedYaw != 0)
 		{
-			client.setCameraYawTarget((client.getCameraYawTarget() + addedYaw) % 2048);
+			client.setCameraYawTarget((client.getCameraYawTarget() + (int) addedYaw) % 2048);
 		}
 
 		if (addedPitch != 0 && client.getCameraPitchTarget() + addedPitch < 512 && client.getCameraPitchTarget() + addedPitch >= 0)
@@ -218,7 +219,7 @@ public class FirstPersonPlugin extends Plugin implements KeyListener, MouseListe
 			}
 			else
 			{
-				client.setCameraPitchTarget(client.getCameraPitchTarget() + addedPitch);
+				client.setCameraPitchTarget(client.getCameraPitchTarget() + (int) addedPitch);
 			}
 			lastPitch = currentPitch;
 		}

@@ -37,4 +37,11 @@ public interface FirstPersonConfig extends Config
 		description = "Inverse the arrow keys for camera movement"
 	)
 	default boolean inverseKeys() { return true; }
+
+	@ConfigItem(
+		keyName = "keyCameraSpeed",
+		name = "Adjust key rotation speed",
+		description = "Adjust the speed the camera rotates when using keys"
+	)
+	default double keyCameraSpeed() { return 0.5; }
 }
