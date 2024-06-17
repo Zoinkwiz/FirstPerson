@@ -26,9 +26,15 @@ package com.firstperson;
 
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
+import net.runelite.client.config.ConfigItem;
 
 @ConfigGroup("firstperson")
 public interface FirstPersonConfig extends Config
 {
-
+	@ConfigItem(
+		keyName = "inverseKeys",
+		name = "Inverse keys for camera movement",
+		description = "Inverse the arrow keys for camera movement"
+	)
+	default boolean inverseKeys() { return true; }
 }

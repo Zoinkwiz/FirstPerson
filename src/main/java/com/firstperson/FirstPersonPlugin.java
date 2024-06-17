@@ -181,12 +181,20 @@ public class FirstPersonPlugin extends Plugin implements KeyListener, MouseListe
 
 			if (upKeyPressed)
 			{
-				addedPitch = (int) diff;
+				addedPitch = (int) -diff;
 			}
 			if (downKeyPressed)
 			{
-				addedPitch = addedYaw - (int) diff;
+				addedPitch = addedYaw - (int) -diff;
 			}
+		}
+		if (config.inverseKeys())
+		{
+			addedPitch *= -1;
+		}
+		else
+		{
+			addedYaw *= -1;
 		}
 
 		LocalPoint lp = client.getLocalPlayer().getLocalLocation();
@@ -283,6 +291,7 @@ public class FirstPersonPlugin extends Plugin implements KeyListener, MouseListe
 			case KeyEvent.VK_SPACE:
 			case KeyEvent.VK_PAGE_UP:
 			case KeyEvent.VK_PAGE_DOWN:
+			case KeyEvent.VK_ESCAPE:
 			case KeyEvent.VK_SHIFT:
 				e.consume();
 				break;
