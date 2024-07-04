@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Ben Poulson <https://github.com/benpoulson>
+ * Copyright (c) 2018, Adam <Adam@sigterm.info>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,12 +22,12 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.firstperson.config;
+package com.firstperson.gpu;
 
-public enum ColorBlindMode
+class ShaderException extends Exception
 {
-	NONE,
-	PROTANOPE,
-	DEUTERANOPE,
-	TRITANOPE;
+	ShaderException(String message)
+	{
+		super(message);
+	}
 }

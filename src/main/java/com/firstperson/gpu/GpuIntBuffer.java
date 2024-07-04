@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 logarrhytmic <https://github.com/logarrhythmic>
+ * Copyright (c) 2018, Adam <Adam@sigterm.info>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,27 +22,62 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.firstperson.config;
+package com.firstperson.gpu;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.IntBuffer;
 
-@Getter
-@RequiredArgsConstructor
-public enum UIScalingMode
+class GpuIntBuffer
 {
-	NEAREST("Nearest Neighbor", 0),
-	LINEAR("Bilinear", 0),
-	MITCHELL("Bicubic (Mitchell)", 1),
-	CATMULL_ROM("Bicubic (Catmull-Rom)", 2),
-	XBR("xBR", 3);
+	private IntBuffer buffer = allocateDirect(65536);
 
-	private final String name;
-	private final int mode;
-
-	@Override
-	public String toString()
+	void put(float x, float y, float z, int w)
 	{
-		return name;
+		buffer.put(Float.floatToIntBits(x))
+			.put(Float.floatToIntBits(y))
+			.put(Float.floatToIntBits(z))
+			.put(w);
+	}
+
+	void flip()
+	{
+		buffer.flip();
+	}
+
+	void clear()
+	{
+		buffer.clear();
+	}
+
+	void ensureCapacity(int size)
+	{
+		int capacity = buffer.capacity();
+		final int position = buffer.position();
+		if ((capacity - position) < size)
+		{
+			do
+			{
+				capacity *= 2;
+			}
+			while ((capacity - position) < size);
+
+			IntBuffer newB = allocateDirect(capacity);
+			buffer.flip();
+			newB.put(buffer);
+			buffer = newB;
+		}
+	}
+
+	IntBuffer getBuffer()
+	{
+		return buffer;
+	}
+
+	static IntBuffer allocateDirect(int size)
+	{
+		return ByteBuffer.allocateDirect(size * Integer.BYTES)
+			.order(ByteOrder.nativeOrder())
+			.asIntBuffer();
 	}
 }

@@ -22,7 +22,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.firstperson;
+package com.firstperson.gpu;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
@@ -32,7 +32,6 @@ import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Constants;
 import net.runelite.api.Scene;
-import net.runelite.client.plugins.gpu.GpuPlugin;
 import net.runelite.client.plugins.gpu.template.Template;
 import net.runelite.client.util.OSType;
 import net.runelite.rlawt.AWTContext;
@@ -82,8 +81,8 @@ class OpenCLManager
 	private static final String KERNEL_NAME_LARGE = "computeLarge";
 
 	private static final int MIN_WORK_GROUP_SIZE = 256;
-	private static final int SMALL_SIZE = FirstPersonPlugin.SMALL_TRIANGLE_COUNT;
-	private static final int LARGE_SIZE = FirstPersonPlugin.MAX_TRIANGLE;
+	private static final int SMALL_SIZE = GpuDrawCallbacks.SMALL_TRIANGLE_COUNT;
+	private static final int LARGE_SIZE = GpuDrawCallbacks.MAX_TRIANGLE;
 	//  struct shared_data {
 	//      int totalNum[12];
 	//      int totalDistance[12];

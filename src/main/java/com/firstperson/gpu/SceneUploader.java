@@ -22,9 +22,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.firstperson;
+package com.firstperson.gpu;
 
-import com.firstperson.regions.Regions;
 import com.google.common.base.Stopwatch;
 import java.io.IOException;
 import java.util.Arrays;
@@ -46,13 +45,15 @@ import net.runelite.api.SceneTileModel;
 import net.runelite.api.SceneTilePaint;
 import net.runelite.api.Tile;
 import net.runelite.api.WallObject;
+import net.runelite.client.plugins.gpu.GpuPluginConfig;
+import net.runelite.client.plugins.gpu.regions.Regions;
 
 @Singleton
 @Slf4j
 class SceneUploader
 {
 	private final Client client;
-	private final FirstPersonPluginConfig gpuConfig;
+	private final GpuPluginConfig gpuConfig;
 
 	private final Regions regions;
 
@@ -64,7 +65,7 @@ class SceneUploader
 	@Inject
 	SceneUploader(
 		Client client,
-		FirstPersonPluginConfig config
+		GpuPluginConfig config
 	)
 	{
 		this.client = client;
@@ -233,8 +234,8 @@ class SceneUploader
 	int upload(Scene scene, SceneTilePaint tile, int tileZ, int tileX, int tileY, GpuIntBuffer vertexBuffer, GpuFloatBuffer uvBuffer,
 			   int lx, int lz, boolean stream)
 	{
-		tileX += FirstPersonPlugin.SCENE_OFFSET;
-		tileY += FirstPersonPlugin.SCENE_OFFSET;
+		tileX += GpuDrawCallbacks.SCENE_OFFSET;
+		tileY += GpuDrawCallbacks.SCENE_OFFSET;
 
 		final int[][][] tileHeights = scene.getTileHeights();
 		final int swHeight = tileHeights[tileZ][tileX][tileY];
@@ -434,7 +435,7 @@ class SceneUploader
 
 	public int pushModel(Model model, GpuIntBuffer vertexBuffer, GpuFloatBuffer uvBuffer)
 	{
-		final int triangleCount = Math.min(model.getFaceCount(), FirstPersonPlugin.MAX_TRIANGLE);
+		final int triangleCount = Math.min(model.getFaceCount(), GpuDrawCallbacks.MAX_TRIANGLE);
 
 		vertexBuffer.ensureCapacity(triangleCount * 12);
 		uvBuffer.ensureCapacity(triangleCount * 12);
@@ -1071,8 +1072,8 @@ class SceneUploader
 		int wy = cy * 8;
 		int sx = wx - scene.getBaseX();
 		int sy = wy - scene.getBaseY();
-		int cmsx = sx + FirstPersonPlugin.SCENE_OFFSET;
-		int cmsy = sy + FirstPersonPlugin.SCENE_OFFSET;
+		int cmsx = sx + GpuDrawCallbacks.SCENE_OFFSET;
+		int cmsy = sy + GpuDrawCallbacks.SCENE_OFFSET;
 		Tile[][][] tiles = scene.getExtendedTiles();
 		for (int x = 0; x < 8; ++x)
 		{
