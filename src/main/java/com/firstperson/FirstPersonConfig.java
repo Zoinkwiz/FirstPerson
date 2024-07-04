@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Adam <Adam@sigterm.info>
+ * Copyright (c) 2024, Zoinkwiz <https://github.com/Zoinkwiz>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,15 +24,31 @@
  */
 package com.firstperson;
 
-class GLBuffer
-{
-	String name;
-	int glBufferId = -1;
-	int size = -1;
-	long clBuffer = -1;
+import net.runelite.client.config.Config;
+import net.runelite.client.config.ConfigGroup;
+import net.runelite.client.config.ConfigItem;
 
-	GLBuffer(String name)
-	{
-		this.name = name;
-	}
+@ConfigGroup("firstperson")
+public interface FirstPersonConfig extends Config
+{
+	@ConfigItem(
+		keyName = "inverseKeys",
+		name = "Inverse keys for camera movement",
+		description = "Inverse the arrow keys for camera movement"
+	)
+	default boolean inverseKeys() { return true; }
+
+	@ConfigItem(
+		keyName = "keyCameraSpeed",
+		name = "Adjust key rotation speed",
+		description = "Adjust the speed the camera rotates when using keys"
+	)
+	default double keyCameraSpeed() { return 0.5; }
+
+	@ConfigItem(
+		keyName = "useGpu",
+		name = "Use GPU rendering (READ DETAILS)",
+		description = "This allows for interaction with objects, but alignment of tile clicks will be incorrect, as well as other plugin overlays"
+	)
+	default boolean useGpu() { return false; }
 }

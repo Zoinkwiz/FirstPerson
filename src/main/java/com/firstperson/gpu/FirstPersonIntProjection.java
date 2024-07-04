@@ -1,4 +1,4 @@
-package com.firstperson;
+package com.firstperson.gpu;
 
 import lombok.Getter;
 import lombok.Setter;
