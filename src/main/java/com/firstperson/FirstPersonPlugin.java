@@ -31,24 +31,30 @@ import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
 import net.runelite.api.coords.LocalPoint;
+import net.runelite.api.hooks.DrawCallbacks;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.callback.Hooks;
 import net.runelite.client.config.ConfigManager;
+import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.input.KeyListener;
 import net.runelite.client.input.KeyManager;
 import net.runelite.client.input.MouseListener;
 import net.runelite.client.input.MouseManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.PluginManager;
+import net.runelite.client.plugins.gpu.GpuPlugin;
 import net.runelite.client.ui.DrawManager;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 @Slf4j
 @PluginDescriptor(
 	name = "First Person",
-	description = "Allows for a first-person experience without the ability to interact with anything"
+	description = "Allows for a first-person experience without the ability to interact with anything",
+	conflicts = "GPU"
 )
-public class FirstPersonPlugin extends Plugin implements KeyListener, MouseListener
+public class FirstPersonPlugin extends Plugin implements KeyListener, MouseListener, DrawCallbacks
 {
 	@Inject
 	private Client client;
@@ -74,11 +80,11 @@ public class FirstPersonPlugin extends Plugin implements KeyListener, MouseListe
 	@Inject
 	MouseManager mouseManager;
 
+	GpuPlugin gpuPlugin;
+
 	final int[] yAxisAbsoluteChange = PreCalculatedTransformations.yAxisAbsoluteChange;
 
 	final double[] xAndYAxisChangeWithPitch = PreCalculatedTransformations.xAndYAxisChangeWithPitch;
-
-	private final Hooks.RenderableDrawListener drawListener = this::shouldDraw;
 
 	long lastMillis = 0;
 	boolean rightKeyPressed;
@@ -96,6 +102,9 @@ public class FirstPersonPlugin extends Plugin implements KeyListener, MouseListe
 		updateCameraPosition();
 	};
 
+	@Inject
+	private PluginManager pluginManager;
+
 	@Override
 	protected void startUp() throws Exception
 	{
@@ -104,36 +113,22 @@ public class FirstPersonPlugin extends Plugin implements KeyListener, MouseListe
 		lastMillis = System.currentTimeMillis();
 		activateFirstPersonCameraMode();
 
-		hooks.registerRenderableDrawListener(drawListener);
+		this.gpuPlugin = new GpuPlugin();
+		pluginManager.startPlugin(gpuPlugin);
+
 		drawManager.registerEveryFrameListener(updateFocus);
 	}
 
 	@Override
 	protected void shutDown() throws Exception
 	{
+		pluginManager.stopPlugin(gpuPlugin);
+
 		keyManager.unregisterKeyListener(this);
 		mouseManager.unregisterMouseListener(this);
 		client.setCameraPitchRelaxerEnabled(false);
 		client.setCameraMode(0);
-		hooks.unregisterRenderableDrawListener(drawListener);
 		drawManager.unregisterEveryFrameListener(updateFocus);
-	}
-
-	boolean shouldDraw(Renderable renderable, boolean drawingUI)
-	{
-		if (renderable instanceof Player)
-		{
-			Player player = (Player) renderable;
-			Player local = client.getLocalPlayer();
-
-			if (player.getName() == null)
-			{
-				return true;
-			}
-			return player != local;
-		}
-
-		return true;
 	}
 
 	private void activateFirstPersonCameraMode()
@@ -243,6 +238,15 @@ public class FirstPersonPlugin extends Plugin implements KeyListener, MouseListe
 		client.setCameraFocalPointX(focalPointX);
 		client.setCameraFocalPointY(focalPointY);
 		client.setCameraFocalPointZ(focalPointZ);
+	}
+
+	@Subscribe
+	public void onConfigChanged(ConfigChanged event)
+	{
+		if (event.getGroup().equals("firstperson") && event.getKey().equals("useGpu"))
+		{
+
+		}
 	}
 
 	@Provides
@@ -381,5 +385,86 @@ public class FirstPersonPlugin extends Plugin implements KeyListener, MouseListe
 	public MouseEvent mouseMoved(MouseEvent mouseEvent)
 	{
 		return mouseEvent;
+	}
+
+	@Override
+	public void draw(Projection projection, Scene scene, Renderable renderable, int orientation, int x, int y, int z, long hash)
+	{
+		if (projection instanceof IntProjection)
+		{
+			IntProjection p = (IntProjection) projection;
+
+			int[] firstPersonCamera = firstPersonCameraPosition();
+
+			FirstPersonIntProjection intProjection = new FirstPersonIntProjection(client);
+			intProjection.setCameraX(firstPersonCamera[0]);
+			intProjection.setCameraY(firstPersonCamera[1]);
+			intProjection.setCameraZ(firstPersonCamera[2]);
+			intProjection.setYawCos(p.getYawCos());
+			intProjection.setYawSin(p.getYawSin());
+			intProjection.setPitchCos(p.getPitchCos());
+			intProjection.setPitchSin(p.getPitchSin());
+
+			gpuPlugin.draw(intProjection, scene, renderable, orientation, x, y, z, hash);
+		}
+	}
+
+	@Override
+	public void drawScenePaint(Scene scene, SceneTilePaint paint, int plane, int tileX, int tileZ)
+	{
+		gpuPlugin.drawScenePaint(scene, paint, plane, tileX, tileZ);
+	}
+
+	@Override
+	public void drawSceneTileModel(Scene scene, SceneTileModel model, int tileX, int tileZ)
+	{
+		gpuPlugin.drawSceneTileModel(scene, model, tileX, tileZ);
+	}
+
+	@Override
+	public void draw(int overlayColor)
+	{
+		gpuPlugin.draw(overlayColor);
+	}
+
+	@Override
+	public void drawScene(double cameraX, double cameraY, double cameraZ, double cameraPitch, double cameraYaw, int plane)
+	{
+		int[] firstPersonCamera = firstPersonCameraPosition();
+		drawScene(firstPersonCamera[0], firstPersonCamera[1], firstPersonCamera[2], cameraPitch, cameraYaw, plane);
+	}
+
+	@Override
+	public void postDrawScene()
+	{
+		gpuPlugin.postDrawScene();
+	}
+
+	@Override
+	public void animate(Texture texture, int diff)
+	{
+		gpuPlugin.animate(texture, diff);
+	}
+
+	@Override
+	public void loadScene(Scene scene)
+	{
+		gpuPlugin.loadScene(scene);
+	}
+
+	@Override
+	public void swapScene(Scene scene)
+	{
+		gpuPlugin.swapScene(scene);
+	}
+
+	public int[] firstPersonCameraPosition()
+	{
+		LocalPoint lp = client.getLocalPlayer().getLocalLocation();
+		int cameraX = lp.getX();
+		int cameraY = Perspective.getTileHeight(client, lp, client.getTopLevelWorldView().getPlane()) - 200;
+		int cameraZ = lp.getY();
+
+		return new int[] { cameraX, cameraY, cameraZ };
 	}
 }
