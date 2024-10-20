@@ -237,6 +237,8 @@ public class GpuDrawCallbacks implements DrawCallbacks
 
 	private int viewportOffsetX;
 	private int viewportOffsetY;
+	private int viewportWidth;
+	private int viewportHeight;
 
 	// Uniforms
 	private int uniColorBlindMode;
@@ -856,6 +858,8 @@ public class GpuDrawCallbacks implements DrawCallbacks
 		this.cameraYaw = cameraYaw;
 		viewportOffsetX = client.getViewportXOffset();
 		viewportOffsetY = client.getViewportYOffset();
+		viewportWidth = client.getViewportWidth();
+		viewportHeight = client.getViewportHeight();
 
 		final Scene scene = client.getScene();
 		scene.setDrawDistance(getDrawDistance());
@@ -1124,9 +1128,6 @@ public class GpuDrawCallbacks implements DrawCallbacks
 
 		final int canvasHeight = client.getCanvasHeight();
 		final int canvasWidth = client.getCanvasWidth();
-
-		final int viewportHeight = client.getViewportHeight();
-		final int viewportWidth = client.getViewportWidth();
 
 		prepareInterfaceTexture(canvasWidth, canvasHeight);
 
@@ -1696,9 +1697,12 @@ public class GpuDrawCallbacks implements DrawCallbacks
 				{
 					return;
 				}
+				client.checkClickbox(projection, model, orientation, x - p.getCameraX(), y - p.getCameraY(), z - p.getCameraZ(), hash);
 			}
-
-			client.checkClickbox(projection, model, orientation, x, y, z, hash);
+			else
+			{
+				client.checkClickbox(projection, model, orientation, x, y, z, hash);
+			}
 
 			targetBufferOffset += sceneUploader.pushSortedModel(
 				projection,
