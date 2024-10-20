@@ -24,8 +24,8 @@
  */
 package com.firstperson.gpu;
 
+import lombok.Getter;
 import net.runelite.api.Client;
-import net.runelite.api.IntProjection;
 import net.runelite.api.Perspective;
 import net.runelite.api.Projection;
 import net.runelite.api.Renderable;
@@ -40,71 +40,72 @@ public class FirstPersonDrawCallbacks implements DrawCallbacks
 {
 	Client client;
 
-	GpuDrawCallbacks gpuDrawCallbacks;
+	@Getter
+	DrawCallbacks pluginImplementingDrawCallback;
 
-	public FirstPersonDrawCallbacks(Client client, GpuDrawCallbacks gpuDrawCallbacks)
+
+	public FirstPersonDrawCallbacks(Client client)
 	{
 		this.client = client;
-		this.gpuDrawCallbacks = gpuDrawCallbacks;
 	}
 
 	@Override
 	public void draw(Projection projection, Scene scene, Renderable renderable, int orientation, int x, int y, int z, long hash)
 	{
-		if (projection instanceof IntProjection)
-		{
-			IntProjection p = (IntProjection) projection;
-
-			gpuDrawCallbacks.draw(p, scene, renderable, orientation, x, y, z, hash);
-		}
+		pluginImplementingDrawCallback.draw(projection, scene, renderable, orientation, x, y, z, hash);
 	}
 
 	@Override
 	public void drawScenePaint(Scene scene, SceneTilePaint paint, int plane, int tileX, int tileZ)
 	{
-		gpuDrawCallbacks.drawScenePaint(scene, paint, plane, tileX, tileZ);
+		pluginImplementingDrawCallback.drawScenePaint(scene, paint, plane, tileX, tileZ);
 	}
 
 	@Override
 	public void drawSceneTileModel(Scene scene, SceneTileModel model, int tileX, int tileZ)
 	{
-		gpuDrawCallbacks.drawSceneTileModel(scene, model, tileX, tileZ);
+		pluginImplementingDrawCallback.drawSceneTileModel(scene, model, tileX, tileZ);
 	}
 	@Override
 	public void draw(int overlayColor)
 	{
-		gpuDrawCallbacks.draw(overlayColor);
+		pluginImplementingDrawCallback.draw(overlayColor);
 	}
 
 	@Override
 	public void drawScene(double cameraX, double cameraY, double cameraZ, double cameraPitch, double cameraYaw, int plane)
 	{
 		int[] firstPersonCamera = firstPersonCameraPosition();
-		gpuDrawCallbacks.drawScene(firstPersonCamera[0], firstPersonCamera[1], firstPersonCamera[2], cameraPitch, cameraYaw, plane);
+		pluginImplementingDrawCallback.drawScene(firstPersonCamera[0], firstPersonCamera[1], firstPersonCamera[2], cameraPitch, cameraYaw, plane);
 	}
 
 	@Override
 	public void postDrawScene()
 	{
-		gpuDrawCallbacks.postDrawScene();
+		pluginImplementingDrawCallback.postDrawScene();
 	}
 
 	@Override
 	public void animate(Texture texture, int diff)
 	{
-		gpuDrawCallbacks.animate(texture, diff);
+		pluginImplementingDrawCallback.animate(texture, diff);
 	}
 
 	@Override
 	public void loadScene(Scene scene)
 	{
-		gpuDrawCallbacks.loadScene(scene);
+		pluginImplementingDrawCallback.loadScene(scene);
 	}
 
 	@Override
 	public void swapScene(Scene scene)
 	{
-		gpuDrawCallbacks.swapScene(scene);
+		pluginImplementingDrawCallback.swapScene(scene);
+	}
+
+	public void setCallback(DrawCallbacks pluginWithCallbacks)
+	{
+		pluginImplementingDrawCallback =  pluginWithCallbacks;
 	}
 
 	public int[] firstPersonCameraPosition()

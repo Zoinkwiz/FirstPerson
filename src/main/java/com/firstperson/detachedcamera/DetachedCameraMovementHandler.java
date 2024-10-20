@@ -78,7 +78,7 @@ public class DetachedCameraMovementHandler
 	{
 		LocalPoint lp = client.getLocalPlayer().getLocalLocation();
 		double playerX = lp.getX();
-		double playerY = Perspective.getTileHeight(client, lp, client.getPlane()) - 200.0;
+		double playerY = Perspective.getTileHeight(client, lp, client.getTopLevelWorldView().getPlane()) - 200.0;
 		double playerZ = lp.getY();
 
 		return new double[] { playerX, playerY, playerZ };

@@ -25,6 +25,7 @@
 package com.firstperson.input;
 
 import com.firstperson.FirstPersonConfig;
+import com.firstperson.FirstPersonPlugin;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import net.runelite.api.Client;
@@ -35,6 +36,7 @@ import net.runelite.client.input.MouseListener;
 public class InputHandler implements KeyListener, MouseListener
 {
 	Client client;
+	FirstPersonPlugin firstPersonPlugin;
 	FirstPersonConfig config;
 
 	boolean rightKeyPressed;
@@ -49,9 +51,10 @@ public class InputHandler implements KeyListener, MouseListener
 
 	long lastMillis;
 
-	public InputHandler(Client client, FirstPersonConfig config, long lastMillis)
+	public InputHandler(Client client, FirstPersonPlugin firstPersonPlugin, FirstPersonConfig config, long lastMillis)
 	{
 		this.client = client;
+		this.firstPersonPlugin = firstPersonPlugin;
 		this.config = config;
 		this.lastMillis = lastMillis;
 	}
@@ -176,7 +179,7 @@ public class InputHandler implements KeyListener, MouseListener
 			case KeyEvent.VK_A:
 			case KeyEvent.VK_W:
 			case KeyEvent.VK_S:
-				if (!config.useGpu())
+				if (!firstPersonPlugin.isGpuActive())
 				{
 					e.consume();
 				}
