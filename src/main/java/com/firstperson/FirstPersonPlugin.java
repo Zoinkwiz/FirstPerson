@@ -27,17 +27,19 @@ package com.firstperson;
 
 import com.firstperson.detachedcamera.DetachedCameraMovementHandler;
 import com.firstperson.gpu.FirstPersonDrawCallbacks;
-import com.firstperson.gpu.GpuDrawCallbacks;
 import com.firstperson.input.InputHandler;
 import com.google.inject.Provides;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
+import net.runelite.api.events.GameTick;
+import net.runelite.api.hooks.DrawCallbacks;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.callback.Hooks;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
+import net.runelite.client.events.PluginChanged;
 import net.runelite.client.input.KeyManager;
 import net.runelite.client.input.MouseManager;
 import net.runelite.client.plugins.Plugin;
@@ -51,8 +53,7 @@ import net.runelite.client.ui.overlay.OverlayManager;
 @PluginDependency(GpuPlugin.class)
 @PluginDescriptor(
 	name = "First Person",
-	description = "Allows for a first-person experience without the ability to interact with anything",
-	conflicts = "GPU"
+	description = "Allows for a first-person experience without the ability to interact with anything"
 )
 public class FirstPersonPlugin extends Plugin
 {
@@ -80,7 +81,8 @@ public class FirstPersonPlugin extends Plugin
 	@Inject
 	MouseManager mouseManager;
 
-	GpuDrawCallbacks gpuDrawCallbacks;
+	@Inject
+	ConfigManager configManager;
 
 	FirstPersonDrawCallbacks firstPersonDrawCallbacks;
 
@@ -91,21 +93,17 @@ public class FirstPersonPlugin extends Plugin
 	@Override
 	protected void startUp() throws Exception
 	{
-		gpuDrawCallbacks = new GpuDrawCallbacks(log);
-		injector.injectMembers(gpuDrawCallbacks);
+		firstPersonDrawCallbacks = new FirstPersonDrawCallbacks(client);
+		if (client.getDrawCallbacks() != null)
+		{
+			firstPersonDrawCallbacks.setCallback(client.getDrawCallbacks());
+		}
 
-		firstPersonDrawCallbacks = new FirstPersonDrawCallbacks(client, gpuDrawCallbacks);
-
-		inputHandler = new InputHandler(client, config, System.currentTimeMillis());
+		inputHandler = new InputHandler(client, this, config, System.currentTimeMillis());
 		keyManager.registerKeyListener(inputHandler);
 		mouseManager.registerMouseListener(inputHandler);
 
 		detachedCameraMovementHandler = new DetachedCameraMovementHandler(client, config, inputHandler);
-
-		if (config.useGpu())
-		{
-			clientThread.invoke(this::activateGpuMode);
-		}
 
 		drawManager.registerEveryFrameListener(cameraMovementHandler);
 
@@ -119,15 +117,31 @@ public class FirstPersonPlugin extends Plugin
 		mouseManager.unregisterMouseListener(inputHandler);
 		client.setCameraMode(0);
 		drawManager.unregisterEveryFrameListener(cameraMovementHandler);
-		clientThread.invokeLater(() -> client.setDrawCallbacks(null));
+		clientThread.invokeLater(() -> {
+			if (config.useGpu())
+			{
+				if (firstPersonDrawCallbacks.getPluginImplementingDrawCallback() != null)
+				{
+					client.setDrawCallbacks(firstPersonDrawCallbacks.getPluginImplementingDrawCallback());
+				}
+				else
+				{
+					client.setDrawCallbacks(null);
+				}
+			}
+		});
 
-		gpuDrawCallbacks.shutDown();
 		client.setCameraPitchRelaxerEnabled(false);
+	}
+
+	public boolean isGpuActive()
+	{
+		return config.useGpu() && firstPersonDrawCallbacks.getPluginImplementingDrawCallback() != null;
 	}
 
 	private final Runnable cameraMovementHandler = () -> {
 		inputHandler.updateCameraPosition();
-		if (!config.useGpu())
+		if (!isGpuActive())
 		{
 			if (client.getCameraMode() != 1) client.setCameraMode(1);
 			detachedCameraMovementHandler.updateDetachedCameraPosition();
@@ -137,21 +151,52 @@ public class FirstPersonPlugin extends Plugin
 	private void activateGpuMode()
 	{
 		clientThread.invokeLater(() -> {
-			gpuDrawCallbacks.startUp();
-			client.setDrawCallbacks(firstPersonDrawCallbacks);
-
-			client.setCameraMode(0);
+			if (client.getDrawCallbacks() != null && client.getDrawCallbacks() != firstPersonDrawCallbacks)
+			{
+				firstPersonDrawCallbacks.setCallback(client.getDrawCallbacks());
+				client.setDrawCallbacks(firstPersonDrawCallbacks);
+				client.setCameraMode(0);
+			}
+			else
+			{
+				disableGpuMode();
+			}
 		});
 	}
 
 	private void disableGpuMode()
 	{
 		clientThread.invokeLater(() -> {
-			gpuDrawCallbacks.shutDown();
-			client.setDrawCallbacks(null);
-
+			if (firstPersonDrawCallbacks.getPluginImplementingDrawCallback() != null)
+			{
+				client.setDrawCallbacks(firstPersonDrawCallbacks.getPluginImplementingDrawCallback());
+			}
+			else
+			{
+				client.setDrawCallbacks(null);
+			}
 			client.setCameraMode(1);
 		});
+	}
+
+	@Subscribe
+	public void onGameTick(GameTick gameTick)
+	{
+		// If changed to something
+		if (client.getDrawCallbacks() == firstPersonDrawCallbacks) return;
+
+		// Something cleared the drawcallback. We should revert from GPU mode
+		if (client.getDrawCallbacks() == null && firstPersonDrawCallbacks.getPluginImplementingDrawCallback() != null)
+		{
+			firstPersonDrawCallbacks.setCallback(null);
+			if (config.useGpu()) disableGpuMode();
+		}
+		else if (client.getDrawCallbacks() != null)
+		{
+			// New drawcallback set. We should wrap it and use it
+			firstPersonDrawCallbacks.setCallback(client.getDrawCallbacks());
+			if (config.useGpu()) activateGpuMode();
+		}
 	}
 
 	@Subscribe

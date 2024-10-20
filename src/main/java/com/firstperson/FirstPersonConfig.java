@@ -48,7 +48,7 @@ public interface FirstPersonConfig extends Config
 	@ConfigItem(
 		keyName = "useGpu",
 		name = "Use GPU rendering (READ DETAILS)",
-		description = "This allows for interaction with objects, but alignment of tile clicks will be incorrect, as well as other plugin overlays"
+		description = "You MUST have either the GPU plugin or 117HD running for this to work. This allows for interaction with objects, but alignment of all clickboxes will be incorrect, as well as other plugin overlays"
 	)
 	default boolean useGpu() { return false; }
 }
