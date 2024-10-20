@@ -55,17 +55,7 @@ public class FirstPersonDrawCallbacks implements DrawCallbacks
 		{
 			IntProjection p = (IntProjection) projection;
 
-			int[] firstPersonCamera = firstPersonCameraPosition();
-
-			FirstPersonIntProjection intProjection = new FirstPersonIntProjection(client);
-			intProjection.setCameraX(firstPersonCamera[0]);
-			intProjection.setCameraY(firstPersonCamera[1]);
-			intProjection.setCameraZ(firstPersonCamera[2]);
-			intProjection.setYawCos(p.getYawCos());
-			intProjection.setYawSin(p.getYawSin());
-			intProjection.setPitchCos(p.getPitchCos());
-			intProjection.setPitchSin(p.getPitchSin());
-			gpuDrawCallbacks.draw(intProjection, scene, renderable, orientation, x, y, z, hash);
+			gpuDrawCallbacks.draw(p, scene, renderable, orientation, x, y, z, hash);
 		}
 	}
 
