@@ -24,7 +24,7 @@ dependencies {
 }
 
 group = 'com.firstperson'
-version = '2.0.2'
+version = '2.0.3'
 
 tasks.withType(JavaCompile) {
 	options.encoding = 'UTF-8'
