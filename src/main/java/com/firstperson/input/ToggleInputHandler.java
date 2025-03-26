@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Zoinkwiz <https://github.com/Zoinkwiz>
+ * Copyright (c) 2025, Zoinkwiz <https://github.com/Zoinkwiz>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,46 +22,50 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.firstperson;
+package com.firstperson.input;
 
-import java.awt.event.InputEvent;
+import com.firstperson.FirstPersonConfig;
+import com.firstperson.FirstPersonPlugin;
 import java.awt.event.KeyEvent;
-import net.runelite.client.config.Config;
-import net.runelite.client.config.ConfigGroup;
-import net.runelite.client.config.ConfigItem;
 import net.runelite.client.config.Keybind;
+import net.runelite.client.input.KeyListener;
 
-@ConfigGroup("firstperson")
-public interface FirstPersonConfig extends Config
+public class ToggleInputHandler implements KeyListener
 {
-	@ConfigItem(
-		keyName = "inverseKeys",
-		name = "Inverse keys for camera movement",
-		description = "Inverse the arrow keys for camera movement"
-	)
-	default boolean inverseKeys() { return true; }
+	public final FirstPersonPlugin firstPersonPlugin;
+	public final FirstPersonConfig firstPersonConfig;
 
-	@ConfigItem(
-		keyName = "keyCameraSpeed",
-		name = "Adjust key rotation speed",
-		description = "Adjust the speed the camera rotates when using keys"
-	)
-	default double keyCameraSpeed() { return 0.5; }
 
-	@ConfigItem(
-		keyName = "useGpu",
-		name = "Use GPU rendering (READ DETAILS)",
-		description = "You MUST have either the GPU plugin or 117HD running for this to work. This allows for interaction with objects, but alignment of all clickboxes will be incorrect, as well as other plugin overlays"
-	)
-	default boolean useGpu() { return false; }
-
-	@ConfigItem(
-		keyName = "toggleKeybind",
-		name = "Toggle first person keybind",
-		description = "Keyboard shortcut for toggling first person mode on and off."
-	)
-	default Keybind toggleKeybind()
+	public ToggleInputHandler(FirstPersonPlugin firstPersonPlugin, FirstPersonConfig firstPersonConfig)
 	{
-		return null;
+		this.firstPersonPlugin = firstPersonPlugin;
+		this.firstPersonConfig = firstPersonConfig;
+	}
+
+	@Override
+	public void keyTyped(KeyEvent e)
+	{
+	}
+
+	@Override
+	public void keyPressed(KeyEvent e)
+	{
+		Keybind keybind = firstPersonConfig.toggleKeybind();
+		if (keybind.matches(e))
+		{
+			if (firstPersonPlugin.isActive())
+			{
+				firstPersonPlugin.deactivate();
+			}
+			else
+			{
+				firstPersonPlugin.activate();
+			}
+		}
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e)
+	{
 	}
 }
