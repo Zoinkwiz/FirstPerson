@@ -28,18 +28,18 @@ package com.firstperson;
 import com.firstperson.detachedcamera.DetachedCameraMovementHandler;
 import com.firstperson.gpu.FirstPersonDrawCallbacks;
 import com.firstperson.input.InputHandler;
+import com.firstperson.input.ToggleInputHandler;
 import com.google.inject.Provides;
 import javax.inject.Inject;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.events.GameTick;
-import net.runelite.api.hooks.DrawCallbacks;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.callback.Hooks;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
-import net.runelite.client.events.PluginChanged;
 import net.runelite.client.input.KeyManager;
 import net.runelite.client.input.MouseManager;
 import net.runelite.client.plugins.Plugin;
@@ -88,31 +88,51 @@ public class FirstPersonPlugin extends Plugin
 
 	InputHandler inputHandler;
 
+	ToggleInputHandler toggleInputHandler;
+
 	DetachedCameraMovementHandler detachedCameraMovementHandler;
+
+	@Getter
+	boolean active;
 
 	@Override
 	protected void startUp() throws Exception
 	{
 		firstPersonDrawCallbacks = new FirstPersonDrawCallbacks(client);
-		if (client.getDrawCallbacks() != null)
+		inputHandler = new InputHandler(client, this, config, System.currentTimeMillis());
+		toggleInputHandler = new ToggleInputHandler(this, config);
+		detachedCameraMovementHandler = new DetachedCameraMovementHandler(client, config, inputHandler);
+
+		activate();
+		keyManager.registerKeyListener(toggleInputHandler);
+	}
+
+	@Override
+	protected void shutDown() throws Exception
+	{
+		deactivate();
+		keyManager.unregisterKeyListener(toggleInputHandler);
+	}
+
+	public void activate()
+	{
+		active = true;
+		if (client.getDrawCallbacks() != null && firstPersonDrawCallbacks != client.getDrawCallbacks())
 		{
 			firstPersonDrawCallbacks.setCallback(client.getDrawCallbacks());
 		}
 
-		inputHandler = new InputHandler(client, this, config, System.currentTimeMillis());
 		keyManager.registerKeyListener(inputHandler);
 		mouseManager.registerMouseListener(inputHandler);
-
-		detachedCameraMovementHandler = new DetachedCameraMovementHandler(client, config, inputHandler);
 
 		drawManager.registerEveryFrameListener(cameraMovementHandler);
 
 		client.setCameraPitchRelaxerEnabled(true);
 	}
 
-	@Override
-	protected void shutDown() throws Exception
+	public void deactivate()
 	{
+		active = false;
 		keyManager.unregisterKeyListener(inputHandler);
 		mouseManager.unregisterMouseListener(inputHandler);
 		client.setCameraMode(0);
@@ -150,6 +170,7 @@ public class FirstPersonPlugin extends Plugin
 
 	private void activateGpuMode()
 	{
+		if (!active) return;
 		clientThread.invokeLater(() -> {
 			if (client.getDrawCallbacks() != null && client.getDrawCallbacks() != firstPersonDrawCallbacks)
 			{
@@ -166,6 +187,7 @@ public class FirstPersonPlugin extends Plugin
 
 	private void disableGpuMode()
 	{
+		if (!active) return;
 		clientThread.invokeLater(() -> {
 			if (firstPersonDrawCallbacks.getPluginImplementingDrawCallback() != null)
 			{
@@ -191,7 +213,7 @@ public class FirstPersonPlugin extends Plugin
 			firstPersonDrawCallbacks.setCallback(null);
 			if (config.useGpu()) disableGpuMode();
 		}
-		else if (client.getDrawCallbacks() != null)
+		else if (client.getDrawCallbacks() != null && client.getDrawCallbacks() != firstPersonDrawCallbacks)
 		{
 			// New drawcallback set. We should wrap it and use it
 			firstPersonDrawCallbacks.setCallback(client.getDrawCallbacks());
