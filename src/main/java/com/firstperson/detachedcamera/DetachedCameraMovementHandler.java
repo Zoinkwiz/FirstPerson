@@ -28,6 +28,8 @@ import com.firstperson.FirstPersonConfig;
 import com.firstperson.input.InputHandler;
 import net.runelite.api.Client;
 import net.runelite.api.Perspective;
+import net.runelite.api.WorldEntity;
+import net.runelite.api.WorldView;
 import net.runelite.api.coords.LocalPoint;
 
 public class DetachedCameraMovementHandler
@@ -77,9 +79,21 @@ public class DetachedCameraMovementHandler
 	private double[] getPlayerPerspectivePosition()
 	{
 		LocalPoint lp = client.getLocalPlayer().getLocalLocation();
-		double playerX = lp.getX();
-		double playerY = Perspective.getTileHeight(client, lp, client.getTopLevelWorldView().getPlane()) - 200.0;
-		double playerZ = lp.getY();
+		WorldView topLevel = client.getTopLevelWorldView();
+
+		LocalPoint mainWorldPoint = lp;
+		if (lp.getWorldView() != WorldView.TOPLEVEL)
+		{
+			WorldEntity worldEntity = topLevel.worldEntities().byIndex(lp.getWorldView());
+			if (worldEntity != null)
+			{
+				mainWorldPoint = worldEntity.transformToMainWorld(lp);
+			}
+		}
+
+		double playerX = mainWorldPoint.getX();
+		double playerY = Perspective.getTileHeight(client, lp, topLevel.getPlane()) - 200.0;
+		double playerZ = mainWorldPoint.getY();
 
 		return new double[] { playerX, playerY, playerZ };
 	}
