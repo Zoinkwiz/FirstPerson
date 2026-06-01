@@ -179,10 +179,7 @@ public class InputHandler implements KeyListener, MouseListener
 			case KeyEvent.VK_A:
 			case KeyEvent.VK_W:
 			case KeyEvent.VK_S:
-				if (!firstPersonPlugin.isGpuActive())
-				{
-					e.consume();
-				}
+                e.consume();
 				break;
 		}
 	}

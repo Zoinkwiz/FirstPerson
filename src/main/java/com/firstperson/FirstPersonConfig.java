@@ -24,8 +24,6 @@
  */
 package com.firstperson;
 
-import java.awt.event.InputEvent;
-import java.awt.event.KeyEvent;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
@@ -47,13 +45,6 @@ public interface FirstPersonConfig extends Config
 		description = "Adjust the speed the camera rotates when using keys"
 	)
 	default double keyCameraSpeed() { return 0.5; }
-
-	@ConfigItem(
-		keyName = "useGpu",
-		name = "Use GPU rendering (READ DETAILS)",
-		description = "You MUST have either the GPU plugin or 117HD running for this to work. This allows for interaction with objects, but alignment of all clickboxes will be incorrect, as well as other plugin overlays"
-	)
-	default boolean useGpu() { return false; }
 
 	@ConfigItem(
 		keyName = "toggleKeybind",
