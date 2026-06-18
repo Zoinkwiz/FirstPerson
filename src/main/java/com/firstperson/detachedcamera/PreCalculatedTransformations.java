@@ -26,6 +26,10 @@ package com.firstperson.detachedcamera;
 
 public class PreCalculatedTransformations
 {
+	public static final int PITCH_SCALE = 8;
+
+	public static final int MAX_PITCH = 512 * PITCH_SCALE;
+
 	public static int[] yAxisAbsoluteChange = {
 		0, -2, -4, -7, -9, -11, -14, -16, -19, -21, -24, -26, -29, -31, -34, -37, -39, -42, -45, -47, -50, -53,
 		-56, -58, -61, -64, -67, -70, -73, -76, -79, -82, -85, -88, -91, -94, -97, -100, -103, -106, -110, -113,

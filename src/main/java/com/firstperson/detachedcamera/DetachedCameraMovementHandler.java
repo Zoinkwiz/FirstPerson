@@ -55,12 +55,14 @@ public class DetachedCameraMovementHandler
 		int yaw = client.getCameraYawTarget();
 		int pitch = client.getCameraPitchTarget();
 
-		double yawRad = Math.toRadians((yaw * 360.0 / 2048.0) - 180.0);
+		double yawRad = Math.toRadians((yaw * 360.0 / 16384.0) - 180.0);
+
+		double pitchIndex = pitch / (double) PreCalculatedTransformations.PITCH_SCALE;
 
 		double distanceAt0Pitch = 750.0;
-		int zRate = yAxisAbsoluteChange[pitch];
+		double zRate = sampleTable(yAxisAbsoluteChange, pitchIndex);
 
-		double cosPitch = xAndYAxisChangeWithPitch[pitch];
+		double cosPitch = sampleTable(xAndYAxisChangeWithPitch, pitchIndex);
 
 		double[] playerPos = getPlayerPerspectivePosition();
 
@@ -70,9 +72,25 @@ public class DetachedCameraMovementHandler
 		double focalPointY = playerPos[1] - zRate;
 		double focalPointZ = playerPos[2] - yShift;
 
-		client.setCameraFocalPointX(focalPointX);
-		client.setCameraFocalPointY(focalPointY);
-		client.setCameraFocalPointZ(focalPointZ);
+		client.setCameraFocalPointX((float) focalPointX);
+		client.setCameraFocalPointY((float) focalPointY);
+		client.setCameraFocalPointZ((float) focalPointZ);
+	}
+	
+	private static double sampleTable(int[] table, double index)
+	{
+		double clamped = Math.max(0.0, Math.min(index, table.length - 1));
+		int lo = (int) clamped;
+		int hi = Math.min(lo + 1, table.length - 1);
+		return table[lo] + (table[hi] - table[lo]) * (clamped - lo);
+	}
+
+	private static double sampleTable(double[] table, double index)
+	{
+		double clamped = Math.max(0.0, Math.min(index, table.length - 1));
+		int lo = (int) clamped;
+		int hi = Math.min(lo + 1, table.length - 1);
+		return table[lo] + (table[hi] - table[lo]) * (clamped - lo);
 	}
 
 

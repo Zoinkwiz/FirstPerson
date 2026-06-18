@@ -26,6 +26,7 @@ package com.firstperson.input;
 
 import com.firstperson.FirstPersonConfig;
 import com.firstperson.FirstPersonPlugin;
+import com.firstperson.detachedcamera.PreCalculatedTransformations;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import net.runelite.api.Client;
@@ -35,6 +36,9 @@ import net.runelite.client.input.MouseListener;
 
 public class InputHandler implements KeyListener, MouseListener
 {
+	private static final int CAMERA_YAW_RANGE = 16384;
+	private static final int YAW_UNIT_SCALE = CAMERA_YAW_RANGE / 2048; // = 8
+
 	Client client;
 	FirstPersonPlugin firstPersonPlugin;
 	FirstPersonConfig config;
@@ -116,21 +120,23 @@ public class InputHandler implements KeyListener, MouseListener
 
 		if (addedYaw != 0)
 		{
-			client.setCameraYawTarget((client.getCameraYawTarget() + (int) addedYaw) % 2048);
+			client.setCameraYawTarget(Math.floorMod(client.getCameraYawTarget() + (int) (addedYaw * YAW_UNIT_SCALE), CAMERA_YAW_RANGE));
 		}
 
-		if (addedPitch != 0 && client.getCameraPitchTarget() + addedPitch < 512 && client.getCameraPitchTarget() + addedPitch >= 0)
+		double scaledPitch = addedPitch * PreCalculatedTransformations.PITCH_SCALE;
+
+		if (scaledPitch != 0 && client.getCameraPitchTarget() + scaledPitch < PreCalculatedTransformations.MAX_PITCH && client.getCameraPitchTarget() + scaledPitch >= 0)
 		{
 			int currentPitch = client.getCameraPitch();
 
 			// If we've gone below the current pitch limit, thus the adjusting pitch got stuck, shift back to it
-			if (lastPitch == currentPitch && currentPitch >= client.getCameraPitchTarget() && addedPitch < 0)
+			if (lastPitch == currentPitch && currentPitch >= client.getCameraPitchTarget() && scaledPitch < 0)
 			{
 				client.setCameraPitchTarget(client.getCameraPitch());
 			}
 			else
 			{
-				client.setCameraPitchTarget(client.getCameraPitchTarget() + (int) addedPitch);
+				client.setCameraPitchTarget(client.getCameraPitchTarget() + (int) scaledPitch);
 			}
 			lastPitch = currentPitch;
 		}
